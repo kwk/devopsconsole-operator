@@ -24,9 +24,11 @@ make build
 ```
 make test-unit
 ```
-* run e2e test:
+### Run e2e test
 For running e2e tests, have minishift started.
 ```
+make minishift-start
+eval $(minishift docker-env)
 make e2e-local
 ```
 > Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
@@ -34,31 +36,13 @@ make e2e-local
 > - oc get deployment,pod
 > - oc logs pod/devopsconsole-operator-5b4bbc7d-4p7hr
 
-## Deployment
+### Dev mode
 
-### Set up Minishift (one-off)
-* create a new profile to test the operator
+* start minishift
 ```
-minishift profile set devopsconsole
-```
-* enable the admin-user add-on
-```
-minishift addon enable admin-user
-```
-* optionally, configure the VM 
-
-```
-minishift config set cpus 4
-minishift config set memory 8GB
-minishift config set vm-driver virtualbox
-```
-* start the instance
-```
-minishift start
+make minishift-start
 ```
 > NOTE: this setup should be deprecated in favor of [OCP4 install]().
-
-### Deploy the operator in dev mode
 
 * In dev mode, simply run your operator locally:
 ```
@@ -68,10 +52,6 @@ make local
 If a specific namespace is provided only that project will watched. 
 As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
-* Make sure minishift is running and use myproject
-```
-oc project myproject
-```
 * Clean previously created resources
 ```
 make deploy-clean
@@ -83,22 +63,11 @@ make deploy-test
 * See the newly created resources
 ```
 oc get is,bc,svc,component.devopsconsole,build
-NAME                                           DOCKER REPO                               TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
-imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                         AGE
-component.devopsconsole.openshift.io/myapp   48s
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
 ```
 
 ### Deploy the operator with Deployment yaml
 
+TODO: Once [PR](https://github.com/redhat-developer/devconsole-operator/pull/33) on OLM makefile, simplify this content with makefile atrgets
 * (optional) minishift internal registry
 Build the operator's controller image and make it available in internal registry
 ```
@@ -133,17 +102,6 @@ oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace tina
 * check if the resources are created
 ```
 oc get all,is,component,bc,build,deployment,pod
-NAME                   READY     STATUS    RESTARTS   AGE
-pod/myapp-bc-1-build   1/1       Running   0          23s
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
-
-NAME                                          DOCKER REPO                         TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
 ```
 ## Directory layout
 
