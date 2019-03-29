@@ -9,18 +9,18 @@ minishift-start:
 	-eval `minishift docker-env` && oc login -u system:admin
 
 # to watch all namespaces, keep namespace empty
-OPERATOR_NAMESPACE ?= ""
 APP_NAMESPACE ?= "app-test"
+LOCAL_TEST_NAMESPACE ?= "local-test"
 
 .PHONY: local-setup
-## setup a project to deploy component CR
+## Creates a new project, aka namespace, in OpenShift
 local-setup:
-	$(Q)-oc new-project $(APP_NAMESPACE)
+	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
 
 .PHONY: local
 ## Run Operator locally
 local: local-setup deploy-rbac build deploy-crd
-	$(Q)operator-sdk up local --namespace=$(OPERATOR_NAMESPACE)
+	$(Q)operator-sdk up local --namespace=$(APP_NAMESPACE) # TODO(kwk): should this maybe be LOCAL_TEST_NAMESPACE?
 
 .PHONY: deploy-rbac
 ## Setup service account and deploy RBAC
@@ -44,15 +44,11 @@ deploy-operator: deploy-crd
 .PHONY: deploy-clean
 ## Deploy a CR as test
 deploy-clean:
-	$(Q)-oc delete component.devopsconsole.openshift.io/myapp
-	$(Q)-oc delete imagestream.image.openshift.io/myapp
-	$(Q)-oc delete imagestream.image.openshift.io/nodejs
-	$(Q)-oc delete buildconfig.build.openshift.io/myapp
-	$(Q)-oc delete deploymentconfig.apps.openshift.io/myapp
+	@-oc delete project $(LOCAL_TEST_NAMESPACE)
 
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test: local-setup
-	$(Q)oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
+	$(Q)-oc apply -f examples/devopsconsole_v1alpha1_component_cr.yaml
 
 endif
