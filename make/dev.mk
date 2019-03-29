@@ -1,5 +1,5 @@
-ifndef DEPLOY_MK
-DEPLOY_MK:=# Prevent repeated "-include".
+ifndef DEV_MK
+DEV_MK:=# Prevent repeated "-include".
 
 include ./make/verbose.mk
 
